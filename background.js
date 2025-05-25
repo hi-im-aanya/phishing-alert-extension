@@ -9,7 +9,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
         visited.push(currentSite);
         chrome.storage.local.set({ visitedSites: visited });
         chrome.storage.local.set({ showPopup: true, currentSite: currentSite });
-
+        chrome.tabs.sendMessage(tabId, { showPopup: true, currentSite: currentSite });
         // ✅ Show system notification
         chrome.notifications.create({
           type: "basic",

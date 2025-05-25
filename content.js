@@ -1,53 +1,34 @@
-// Wait 500 milliseconds to give background.js time to update storage
-setTimeout(function () {
-  chrome.storage.local.get(["showPopup", "currentSite"], function(data) {
-    if (data.showPopup) {
-      // Create the popup box
-      const popup = document.createElement("div");
-      popup.innerText = "⚠️ New site visited: " + data.currentSite;
+// Listen for messages from background.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.showPopup) {
+    // Create the popup container
+    const popup = document.createElement("div");
+    popup.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #fff;
+        border: 2px solid #333;
+        padding: 15px;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+        z-index: 999999;
+        font-family: sans-serif;
+        font-size: 14px;
+      ">
+        ⚠️ New site visited: <strong>${request.currentSite}</strong>
+        <span id="close-popup" style="margin-left: 10px; cursor: pointer;">❌</span>
+      </div>
+    `;
 
-      // Style the popup
-      popup.style.position = "fixed";
-      popup.style.top = "20px";
-      popup.style.right = "20px";
-      popup.style.backgroundColor = "#ffcc00";
-      popup.style.padding = "15px 40px 15px 15px"; // Room for close button
-      popup.style.zIndex = "9999";
-      popup.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-      popup.style.fontSize = "16px";
-      popup.style.borderRadius = "8px";
-      popup.style.maxWidth = "300px";
-      popup.style.lineHeight = "1.4";
-      popup.style.fontFamily = "sans-serif";
+    document.body.appendChild(popup);
 
-      // Create the close (X) button
-      const closeBtn = document.createElement("span");
-      closeBtn.innerHTML = "&times;";
-      closeBtn.style.position = "absolute";
-      closeBtn.style.top = "8px";
-      closeBtn.style.right = "12px";
-      closeBtn.style.cursor = "pointer";
-      closeBtn.style.fontSize = "20px";
-      closeBtn.style.color = "#333";
-      closeBtn.style.fontWeight = "bold";
+    // Close popup when "X" is clicked
+    document.getElementById("close-popup").addEventListener("click", () => {
+      popup.remove();
+    });
 
-      // Remove popup when close button is clicked
-      closeBtn.addEventListener("click", function () {
-        popup.remove();
-      });
-
-      // Add close button to the popup
-      popup.appendChild(closeBtn);
-
-      // Add the popup to the page
-      document.body.appendChild(popup);
-
-      // Auto-remove the popup after 20 seconds
-      setTimeout(function () {
-        if (document.body.contains(popup)) {
-          popup.remove();
-        }
-      }, 20000); // 20,000 milliseconds = 20 seconds
-    }
-  });
-}, 500); // wait 500ms to make sure storage is updated
+    // Optionally reset the flag
+    chrome.storage.local.set({ showPopup: false });
+  }
+});
